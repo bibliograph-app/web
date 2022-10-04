@@ -1,7 +1,8 @@
 import clsx from "clsx";
 import { GetStaticProps, InferGetStaticPropsType, NextPage } from "next";
 import Head from "next/head";
-import { useMemo } from "react";
+import React, { useContext, useMemo, useState } from "react";
+
 import { Flow } from "~/components/Flow";
 
 export const getStaticProps: GetStaticProps<
@@ -288,6 +289,22 @@ export const getStaticProps: GetStaticProps<
 };
 
 const Page: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = (props) => {
+  const materials: {
+    id: string;
+    title: string;
+  }[] = useMemo(() => {
+    return [
+      {
+        id: props.id,
+        title: props.title,
+      },
+      ...props.relations.edges.map(({ node }) => ({
+        id: node.to.id,
+        title: node.to.title,
+      })),
+    ];
+  }, [props]);
+
   const flowdata = useMemo(
     () => {
       const combined: {
@@ -363,6 +380,8 @@ const Page: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = (props) =
     [props],
   );
 
+  const [focus, setFocus] = useState<string | null>(null);
+
   return (
     <>
       <Head>
@@ -375,12 +394,80 @@ const Page: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = (props) =
           ["flex"],
         )}
       >
-        <div className={clsx(["w-full"], ["h-full"])}>
-          <Flow data={flowdata} />
-        </div>
+        <MouseFocusContext.Provider
+          value={{
+            focus,
+            setFocus(to) {
+              setFocus(to);
+            },
+          }}
+        >
+          <div
+            className={clsx(
+              ["w-96"],
+              ["shadow-lg"],
+            )}
+          >
+            <Materials
+              classNames={clsx(["h-full"])}
+              materials={materials}
+              focus={focus}
+            />
+          </div>
+          <div
+            className={clsx(
+              [["flex-grow"], ["flex-shrink-0"]],
+              ["h-full"],
+            )}
+          >
+            <Flow focus={focus} data={flowdata} />
+          </div>
+        </MouseFocusContext.Provider>
       </main>
     </>
   );
 };
+
+export const Materials: React.FC<{
+  classNames?: string;
+  focus: string | null;
+  materials: { id: string; title: string }[];
+}> = ({ classNames, materials }) => {
+  const { focus, setFocus } = useContext(MouseFocusContext);
+
+  return (
+    <div className={clsx(classNames, ["divide-y"], ["bg-slate-50"])}>
+      {materials.map(({ id, title }) => (
+        <div
+          key={id}
+          className={clsx(
+            ["bg-white"],
+            ["px-4"],
+            ["py-4"],
+            focus === id && [
+              "bg-teal-200",
+            ],
+          )}
+          onMouseEnter={() => {
+            setFocus(id);
+          }}
+          onMouseLeave={() => {
+            if (focus === id) setFocus(null);
+          }}
+        >
+          <div className={clsx(["text-sm"])}>{title}</div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export const MouseFocusContext = React.createContext<{
+  focus: string | null;
+  setFocus(to: string | null): void;
+}>({
+  focus: null,
+  setFocus: () => {},
+});
 
 export default Page;

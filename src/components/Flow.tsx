@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import React, { useMemo } from "react";
+import React, { useContext, useEffect, useMemo } from "react";
 import ReactFlow, {
   Background,
   Controls,
@@ -12,17 +12,22 @@ import ReactFlow, {
   useNodesState,
 } from "reactflow";
 
+import { MouseFocusContext } from "~/pages";
+
 export const MaterialNode: React.FC<
   NodeProps<{
     title: string;
     thumbnail: string | null;
   }>
 > = ({
+  id,
   data: {
     title,
-    thumbnail: thumbnail,
+    thumbnail,
   },
 }) => {
+  const { focus, setFocus } = useContext(MouseFocusContext);
+  const focusing = useMemo(() => focus === id, [focus, id]);
   return (
     <>
       <Handle type="source" position={Position.Bottom} />
@@ -34,9 +39,18 @@ export const MaterialNode: React.FC<
           ["h-28"],
           ["p-2"],
           "border",
-          ["bg-white"],
+          {
+            "bg-white": !focusing,
+            "bg-teal-200": focusing,
+          },
           ["rounded-md"],
         )}
+        onMouseEnter={() => {
+          setFocus(id);
+        }}
+        onMouseLeave={() => {
+          if (focusing) setFocus(null);
+        }}
       >
         {thumbnail && (
           <img
@@ -69,6 +83,7 @@ export const calcPosition = (nest: number[]) => {
 };
 
 export const Flow: React.FC<{
+  focus: string | null;
   data: {
     nodes: {
       id: string;
@@ -86,7 +101,7 @@ export const Flow: React.FC<{
         | { tag: "TRANSLATE"; lang: string };
     }[];
   };
-}> = ({ data }) => {
+}> = ({ focus, data }) => {
   const nodeTypes = useMemo<NodeTypes>(() => ({ material: MaterialNode }), []);
   const [nodes, setNodes, onNodesChange] = useNodesState<{
     title: string;
@@ -105,17 +120,25 @@ export const Flow: React.FC<{
             y: 384,
           });
       return ({
-        id: id,
+        id,
         type: "material",
-        position: position,
+        position,
+        connectable: false,
         data: { title, thumbnail },
       });
     }),
   );
+  useEffect(() => {
+    setNodes(nodes.map(({ id, data, ...rest }) => ({
+      id,
+      data: { ...data },
+      ...rest,
+    })));
+  }, [focus, nodes, setNodes]);
 
   const [edges, setEdges, onEdgesChange] = useEdgesState(
     data.edges.map(({ id, from, to, type }) => ({
-      id: id,
+      id,
       source: from,
       target: to,
       label: type.tag,
@@ -134,8 +157,8 @@ export const Flow: React.FC<{
       nodeTypes={nodeTypes}
       fitView
     >
-      <Controls></Controls>
-      <Background></Background>
+      <Controls />
+      <Background />
     </ReactFlow>
   );
 };
