@@ -7,7 +7,7 @@
   ],
   "plugins": [
     "unused-imports",
-    "simple-import-sort",
+    "simple-import-sort"
   ],
   "rules": {
     "prefer-spread": 2,
@@ -21,5 +21,6 @@
     "sort-imports": 0,
     "simple-import-sort/imports": 2,
     "simple-import-sort/exports": 2,
-  },
+    "react/self-closing-comp": [2, { "component": true, "html": false }]
+  }
 }
