@@ -12,7 +12,7 @@ import ReactFlow, {
   useNodesState,
 } from "reactflow";
 
-import { MouseFocusContext } from "~/pages";
+import { MouseFocusContext } from "~/components/MouseFocusContext";
 
 export const MaterialNode: React.FC<
   NodeProps<{
@@ -82,25 +82,27 @@ export const calcPosition = (nest: number[]) => {
   }
 };
 
+export type FlowType = {
+  nodes: {
+    id: string;
+    title: string;
+    thumbnail: string | null;
+    nest: number[];
+  }[];
+  edges: {
+    id: string;
+    from: string;
+    to: string;
+    type:
+      | { tag: "REFER" }
+      | { tag: "UPDATE" }
+      | { tag: "TRANSLATE"; lang: string };
+  }[];
+};
+
 export const Flow: React.FC<{
   focus: string | null;
-  data: {
-    nodes: {
-      id: string;
-      title: string;
-      thumbnail: string | null;
-      nest: number[];
-    }[];
-    edges: {
-      id: string;
-      from: string;
-      to: string;
-      type:
-        | { tag: "REFER" }
-        | { tag: "UPDATE" }
-        | { tag: "TRANSLATE"; lang: string };
-    }[];
-  };
+  data: FlowType;
 }> = ({ focus, data }) => {
   const nodeTypes = useMemo<NodeTypes>(() => ({ material: MaterialNode }), []);
   const [nodes, setNodes, onNodesChange] = useNodesState<{

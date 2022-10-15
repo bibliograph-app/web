@@ -5,6 +5,8 @@ import React, { useContext, useMemo, useState } from "react";
 
 import { Flow } from "~/components/Flow";
 
+import { MouseFocusContext } from "../components/MouseFocusContext";
+
 export const getStaticProps: GetStaticProps<
   {
     id: string;
@@ -461,13 +463,5 @@ export const Materials: React.FC<{
     </div>
   );
 };
-
-export const MouseFocusContext = React.createContext<{
-  focus: string | null;
-  setFocus(to: string | null): void;
-}>({
-  focus: null,
-  setFocus: () => {},
-});
 
 export default Page;
