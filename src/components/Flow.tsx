@@ -6,7 +6,6 @@ import ReactFlow, {
   Handle,
   MarkerType,
   NodeProps,
-  NodeTypes,
   Position,
   useEdgesState,
   useNodesState,
@@ -82,7 +81,7 @@ export const calcPosition = (nest: number[]) => {
   }
 };
 
-export type FlowType = {
+export const Flow: React.FC<{
   nodes: {
     id: string;
     title: string;
@@ -98,29 +97,17 @@ export type FlowType = {
       | { tag: "UPDATE" }
       | { tag: "TRANSLATE"; lang: string };
   }[];
-};
+}> = ({ nodes: initNodes, edges: initEdges }) => {
+  const nodeTypes = useMemo(() => ({ material: MaterialNode }), []);
 
-export const Flow: React.FC<{
-  focus: string | null;
-  data: FlowType;
-}> = ({ focus, data }) => {
-  const nodeTypes = useMemo<NodeTypes>(() => ({ material: MaterialNode }), []);
-  const [nodes, setNodes, onNodesChange] = useNodesState<{
-    title: string;
-    thumbnail: string | null;
-  }>(
-    data.nodes.map(({ id, title, thumbnail, nest }) => {
+  const [nodes, setNodes, onNodesChange] = useNodesState<{ title: string; thumbnail: string | null }>([]);
+  useEffect(() => {
+    setNodes(initNodes.map(({ id, title, thumbnail, nest }) => {
       const position = nest.length === 1
         ? { x: 0, y: 0 }
         : (nest.length === 2
-          ? {
-            x: nest[1] * 128,
-            y: 192,
-          }
-          : {
-            x: nest[1] * 128 + 16,
-            y: 384,
-          });
+          ? { x: nest[1] * 128, y: 192 }
+          : { x: nest[1] * 128 + 16, y: 384 });
       return ({
         id,
         type: "material",
@@ -128,27 +115,21 @@ export const Flow: React.FC<{
         connectable: false,
         data: { title, thumbnail },
       });
-    }),
-  );
-  useEffect(() => {
-    setNodes(nodes.map(({ id, data, ...rest }) => ({
-      id,
-      data: { ...data },
-      ...rest,
-    })));
-  }, [focus, nodes, setNodes]);
+    }));
+  }, [initNodes, setNodes]);
 
-  const [edges, setEdges, onEdgesChange] = useEdgesState(
-    data.edges.map(({ id, from, to, type }) => ({
-      id,
-      source: from,
-      target: to,
-      label: type.tag,
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-      },
-    })),
-  );
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  useEffect(() => {
+    setEdges(
+      initEdges.map(({ id, from, to, type }) => ({
+        id,
+        source: from,
+        target: to,
+        label: type.tag,
+        markerEnd: { type: MarkerType.ArrowClosed },
+      })),
+    );
+  }, [initEdges, setEdges]);
 
   return (
     <ReactFlow

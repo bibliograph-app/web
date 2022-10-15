@@ -5,7 +5,7 @@ import { NextPage } from "next";
 import Head from "next/head";
 import React, { ComponentProps, useMemo, useState } from "react";
 
-import { Flow, FlowType } from "~/components/Flow";
+import { Flow } from "~/components/Flow";
 import { MaterialsList } from "~/components/Materials";
 import { MouseFocusContext } from "~/components/MouseFocusContext";
 import { graphql } from "~/gql";
@@ -89,13 +89,27 @@ export const getStaticProps: GetStaticProps<
         })),
       })),
     },
+    revalidate: 60,
   };
 };
 
 const Page: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = (props) => {
+  return (
+    <>
+      <Head>
+        <title>Test</title>
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      <PageBody {...props} />
+    </>
+  );
+};
+
+export const PageBody: React.FC<ComponentProps<typeof Page>> = (props) => {
   const [focus, setFocus] = useState<string | null>(null);
-  const flowData = useMemo<FlowType>(() => {
-    const nodes: FlowType["nodes"] = [
+
+  const flowData: Pick<ComponentProps<typeof Flow>, "nodes" | "edges"> = useMemo(() => {
+    const nodes = [
       { id: props.id, title: props.title, thumbnail: null, nest: [0] },
       ...props.references.reduce(
         (prev, ref1, i1) => [
@@ -105,10 +119,10 @@ const Page: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = (props) =
           { id: ref1.id, title: ref1.title, thumbnail: null, nest: [0, i1] },
           ...prev,
         ],
-        [] as FlowType["nodes"],
+        [] as ComponentProps<typeof Flow>["nodes"],
       ),
     ].filter(({ id: id1 }, i, arr) => arr.findIndex(({ id: id2 }) => id2 === id1) === i);
-    const edges: FlowType["edges"] = props.references
+    const edges = props.references
       .reduce(
         (prev, ref1) => [
           ...ref1.references.map((ref2) => ({
@@ -125,7 +139,7 @@ const Page: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = (props) =
           },
           ...prev,
         ],
-        [] as FlowType["edges"],
+        [] as ComponentProps<typeof Flow>["edges"],
       )
       .filter(({ id: id1 }, i, arr) => arr.findIndex(({ id: id2 }) => id2 === id1) === i);
     return ({
@@ -133,6 +147,7 @@ const Page: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = (props) =
       edges,
     });
   }, [props]);
+
   const listData = useMemo<ComponentProps<typeof MaterialsList>["materials"]>(
     () =>
       [
@@ -153,37 +168,21 @@ const Page: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = (props) =
   );
 
   return (
-    <>
-      <Head>
-        <title>Test</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      <main
-        className={clsx(
-          "h-screen",
-          ["flex"],
-        )}
-      >
-        <MouseFocusContext.Provider value={{ focus, setFocus }}>
-          <div
-            className={clsx(
-              ["w-72"],
-              ["shadow-lg"],
-            )}
-          >
-            <MaterialsList focus={focus} materials={listData} />
-          </div>
-          <div
-            className={clsx(
-              [["flex-grow"], ["flex-shrink-0"]],
-              ["h-full"],
-            )}
-          >
-            <Flow focus={focus} data={flowData} />
-          </div>
-        </MouseFocusContext.Provider>
-      </main>
-    </>
+    <main
+      className={clsx(
+        [["min-h-[720px]"], ["h-full"]],
+        [["flex"], ["items-stretch"]],
+      )}
+    >
+      <MouseFocusContext.Provider value={{ focus, setFocus }}>
+        <div className={clsx(["w-72"], ["shadow-lg"])}>
+          <MaterialsList classNames={clsx(["h-full"])} focus={focus} materials={listData} />
+        </div>
+        <div className={clsx([["flex-grow"], ["flex-shrink-0"]])}>
+          {<Flow nodes={flowData.nodes} edges={flowData.edges} />}
+        </div>
+      </MouseFocusContext.Provider>
+    </main>
   );
 };
 

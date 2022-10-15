@@ -7,9 +7,9 @@ const Page: NextPage<{}> = ({}) => {
     <>
       <main
         className={clsx(
-          ["min-h-[480px]"],
+          [["min-h-[480px]"], ["h-full"]],
           ["mx-auto"],
-          ["h-full"],
+          ["pb-[64px]"],
           ["container", "max-w-screen-xl"],
           [
             "flex",
