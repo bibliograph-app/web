@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import { GraphQLClient } from "graphql-request";
-import { GetStaticPaths, GetStaticProps } from "next";
-import { InferGetStaticPropsType, NextPage } from "next";
+import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
+import { NextPage } from "next";
 import Head from "next/head";
 import React, { ComponentProps, useMemo, useState } from "react";
 
@@ -9,6 +9,14 @@ import { Flow, FlowType } from "~/components/Flow";
 import { MaterialsList } from "~/components/Materials";
 import { MouseFocusContext } from "~/components/MouseFocusContext";
 import { graphql } from "~/gql";
+
+const fetchMaterialPagePathsQueryDocument = graphql(`
+  query fetchMaterialPagePaths {
+    materials {
+      id
+    }
+  }
+`);
 
 const fetchMaterialPageQueryDocument = graphql(`
   query fetchMaterialPage($id: ID!) {
@@ -34,11 +42,14 @@ const fetchMaterialPageQueryDocument = graphql(`
   }
 `);
 
-export const getStaticPaths: GetStaticPaths<{ id: string }> = () => {
+export const getStaticPaths: GetStaticPaths<{ id: string }> = async () => {
+  const client = new GraphQLClient("http://localhost:4000/graphql");
+  const { materials } = await client.request(fetchMaterialPagePathsQueryDocument);
+
   return {
-    paths: [{
-      params: { id: "4e96602b-ebe2-4204-87f1-ddd6144b82e0" },
-    }],
+    paths: materials.map(({ id }) => ({
+      params: { id },
+    })),
     fallback: "blocking",
   };
 };
