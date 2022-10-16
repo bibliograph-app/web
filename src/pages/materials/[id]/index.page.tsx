@@ -6,6 +6,7 @@ import Head from "next/head";
 import React, { ComponentProps, useMemo, useState } from "react";
 
 import { Flow } from "~/components/Flow";
+import { MaterialInfo } from "~/components/MaterialInfo";
 import { MaterialsList } from "~/components/Materials";
 import { MouseFocusContext } from "~/components/MouseFocusContext";
 import { graphql } from "~/gql";
@@ -24,16 +25,19 @@ const fetchMaterialPageQueryDocument = graphql(`
       id
       title
       isbn13
+      cover
       references {
         material {
           id
           title
           isbn13
+          cover
           references {
             material {
               id
               title
               isbn13
+              cover
             }
           }
         }
@@ -59,11 +63,18 @@ export const getStaticProps: GetStaticProps<
     id: string;
     title: string;
     isbn13: string | null;
+    cover: string | null;
     references: {
       id: string;
       title: string;
       isbn13: string | null;
-      references: { id: string; title: string; isbn13: string | null }[];
+      cover: string | null;
+      references: {
+        id: string;
+        title: string;
+        isbn13: string | null;
+        cover: string | null;
+      }[];
     }[];
   },
   { id: string }
@@ -78,14 +89,17 @@ export const getStaticProps: GetStaticProps<
       id: material.id,
       title: material.title,
       isbn13: material.isbn13 || null,
+      cover: material.cover || null,
       references: material.references.map(({ material }) => ({
         id: material.id,
         title: material.title,
         isbn13: material.isbn13 || null,
+        cover: material.cover || null,
         references: material.references.map(({ material }) => ({
           id: material.id,
           title: material.title,
           isbn13: material.isbn13 || null,
+          cover: material.cover || null,
         })),
       })),
     },
@@ -110,13 +124,13 @@ export const PageBody: React.FC<ComponentProps<typeof Page>> = (props) => {
 
   const flowData: Pick<ComponentProps<typeof Flow>, "nodes" | "edges"> = useMemo(() => {
     const nodes = [
-      { id: props.id, title: props.title, thumbnail: null, nest: [0] },
+      { id: props.id, title: props.title, thumbnail: props.cover, nest: [0] },
       ...props.references.reduce(
         (prev, ref1, i1) => [
           ...ref1.references.map((ref2, i2) => (
-            { id: ref2.id, title: ref2.title, thumbnail: null, nest: [0, i1, i2] }
+            { id: ref2.id, title: ref2.title, thumbnail: ref2.cover, nest: [0, i1, i2] }
           )),
-          { id: ref1.id, title: ref1.title, thumbnail: null, nest: [0, i1] },
+          { id: ref1.id, title: ref1.title, thumbnail: ref1.cover, nest: [0, i1] },
           ...prev,
         ],
         [] as ComponentProps<typeof Flow>["nodes"],
@@ -176,10 +190,16 @@ export const PageBody: React.FC<ComponentProps<typeof Page>> = (props) => {
     >
       <MouseFocusContext.Provider value={{ focus, setFocus }}>
         <div className={clsx(["w-72"], ["shadow-lg"])}>
-          <MaterialsList classNames={clsx(["h-full"])} focus={focus} materials={listData} />
+          <MaterialsList className={clsx(["h-full"])} focus={focus} materials={listData} />
         </div>
         <div className={clsx([["flex-grow"], ["flex-shrink-0"]])}>
           {<Flow nodes={flowData.nodes} edges={flowData.edges} />}
+        </div>
+        <div className={clsx(["w-96"], ["shadow-lg"])}>
+          <MaterialInfo
+            className={clsx(["h-full"])}
+            id={props.id}
+          />
         </div>
       </MouseFocusContext.Provider>
     </main>

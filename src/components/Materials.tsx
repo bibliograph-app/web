@@ -6,16 +6,16 @@ import { useContext } from "react";
 import { MouseFocusContext } from "~/components/MouseFocusContext";
 
 export const MaterialsList: React.FC<{
-  classNames?: string;
+  className?: string;
   focus: string | null;
   materials: { id: string; title: string }[];
-}> = ({ classNames, materials }) => {
+}> = ({ className, materials }) => {
   const { focus, setFocus } = useContext(MouseFocusContext);
 
   return (
     <div
       className={clsx(
-        classNames,
+        className,
         ["h-full"],
         ["py-4"],
         ["bg-slate-200"],
@@ -30,7 +30,7 @@ export const MaterialsList: React.FC<{
           <div
             key={id}
             className={clsx(
-              [["px-4"], ["py-3"]],
+              [["px-4"], ["py-2"]],
               [
                 focus !== id && ["bg-white"],
                 focus === id && ["bg-teal-200"],
