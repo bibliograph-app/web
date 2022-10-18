@@ -30,48 +30,50 @@ export const MaterialsList: React.FC<{
           <div
             key={id}
             className={clsx(
-              [["px-4"], ["py-2"]],
-              [
-                focus !== id && ["bg-white"],
-                focus === id && ["bg-teal-200"],
-              ],
-              ["flex", ["items-center"]],
+              ["flex"],
             )}
-            onMouseEnter={() => {
-              setFocus(id);
-            }}
-            onMouseLeave={() => {
-              if (focus === id) setFocus(null);
-            }}
           >
             <div
               className={clsx(
                 ["flex-grow"],
-                ["text-xs"],
-                ["text-slate-900"],
+                [["px-4"], ["py-3"]],
+                ["flex", "items-center"],
+                [
+                  focus !== id && ["bg-white"],
+                  focus === id && ["bg-teal-200"],
+                ],
               )}
+              onMouseEnter={() => {
+                setFocus(id);
+              }}
+              onMouseLeave={() => {
+                if (focus === id) setFocus(null);
+              }}
             >
-              {title}
+              <span
+                className={clsx(
+                  ["text-xs"],
+                  ["text-slate-900"],
+                )}
+              >
+                {title}
+              </span>
             </div>
             <Link href={{ pathname: "/materials/[id]", query: { id } }}>
-              <a>
-                <div
+              <a
+                className={clsx(
+                  ["flex", "items-center"],
+                  ["px-4", "py-2"],
+                  [["bg-blue-200"], ["text-blue-800"]],
+                  [["hover:bg-blue-400"], ["hover:text-blue-50"]],
+                )}
+              >
+                <ArrowTopRightOnSquareIcon
                   className={clsx(
-                    ["ml-2"],
-                    ["p-2"],
-                    ["rounded-md"],
-                    ["text-slate-900"],
-                    ["hover:bg-teal-400"],
-                    ["hover:text-teal-50"],
+                    ["flex-shrink-0"],
+                    ["h-4"],
                   )}
-                >
-                  <ArrowTopRightOnSquareIcon
-                    className={clsx(
-                      ["flex-shrink-0"],
-                      ["h-4"],
-                    )}
-                  />
-                </div>
+                />
               </a>
             </Link>
           </div>
