@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import Image from "next/image";
 import React, { useContext, useEffect, useMemo } from "react";
 import ReactFlow, {
   Background,
@@ -34,7 +35,7 @@ export const MaterialNode: React.FC<
       <Handle type="target" position={Position.Left} />
       <div
         className={clsx(
-          ["w-24"],
+          ["w-28"],
           ["h-28"],
           ["p-2"],
           "border",
@@ -52,14 +53,13 @@ export const MaterialNode: React.FC<
         }}
       >
         {thumbnail && (
-          <img
-            className={clsx(
-              ["mx-auto"],
-              ["h-full"],
-            )}
+          <Image
             src={thumbnail}
-          >
-          </img>
+            width={96}
+            height={96}
+            objectFit="scale-down"
+            alt={`image of ${title}`}
+          />
         )}
         {!thumbnail && (
           <div className={clsx(["text-xs"], ["leading-tight"])}>
