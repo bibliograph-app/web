@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import request from "graphql-request";
 import Image from "next/image";
+import Link from "next/link";
 import React from "react";
 import useSWR from "swr";
 
@@ -62,7 +63,9 @@ export const Info: React.FC<{
       <ul>
         {authorships.map(({ author }) => (
           <li key={author.id}>
-            {author.name}
+            <Link href={{ pathname: "/authors/[id]", query: { id: author.id } }}>
+              {author.name}
+            </Link>
           </li>
         ))}
       </ul>
