@@ -2,4 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-@import "reactflow/dist/style.css"
+@import "reactflow/dist/style.css";
+
+:root {
+  overflow-y: scroll;
+}

@@ -19,6 +19,7 @@ export const MaterialsList: React.FC<{
         ["h-full"],
         ["py-4"],
         ["bg-slate-200"],
+        ["overflow-y-scroll"],
       )}
     >
       <div
