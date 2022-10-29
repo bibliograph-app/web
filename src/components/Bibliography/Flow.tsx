@@ -12,21 +12,16 @@ import ReactFlow, {
   useNodesState,
 } from "reactflow";
 
-import { MouseFocusContext } from "~/components/MouseFocusContext";
+import { BibliographyContext } from "./context";
 
-export const MaterialNode: React.FC<
-  NodeProps<{
-    title: string;
-    thumbnail: string | null;
-  }>
-> = ({
+export const MaterialNode: React.FC<NodeProps<{ title: string; thumbnail: string | null }>> = ({
   id,
   data: {
     title,
     thumbnail,
   },
 }) => {
-  const { focus, setFocus } = useContext(MouseFocusContext);
+  const { focusId: focus, changeFocus: onFocus, changeShow: onClick } = useContext(BibliographyContext);
   const focusing = useMemo(() => focus === id, [focus, id]);
   return (
     <>
@@ -46,10 +41,13 @@ export const MaterialNode: React.FC<
           ["rounded-md"],
         )}
         onMouseEnter={() => {
-          setFocus(id);
+          onFocus(id);
         }}
         onMouseLeave={() => {
-          if (focusing) setFocus(null);
+          if (focusing) onFocus(null);
+        }}
+        onClick={() => {
+          onClick(id);
         }}
       >
         {thumbnail && (

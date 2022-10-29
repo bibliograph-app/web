@@ -3,14 +3,13 @@ import clsx from "clsx";
 import Link from "next/link";
 import { useContext } from "react";
 
-import { MouseFocusContext } from "~/components/MouseFocusContext";
+import { BibliographyContext } from "./context";
 
-export const MaterialsList: React.FC<{
+export const List: React.FC<{
   className?: string;
-  focus: string | null;
   materials: { id: string; title: string }[];
 }> = ({ className, materials }) => {
-  const { focus, setFocus } = useContext(MouseFocusContext);
+  const { focusId, changeFocus, changeShow } = useContext(BibliographyContext);
 
   return (
     <div
@@ -40,15 +39,18 @@ export const MaterialsList: React.FC<{
                 [["px-4"], ["py-3"]],
                 ["flex", "items-center"],
                 [
-                  focus !== id && ["bg-white"],
-                  focus === id && ["bg-teal-200"],
+                  focusId !== id && ["bg-white"],
+                  focusId === id && ["bg-teal-200"],
                 ],
               )}
               onMouseEnter={() => {
-                setFocus(id);
+                changeFocus(id);
               }}
               onMouseLeave={() => {
-                if (focus === id) setFocus(null);
+                if (focusId === id) changeFocus(null);
+              }}
+              onClick={() => {
+                changeShow(id);
               }}
             >
               <span

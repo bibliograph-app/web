@@ -1,14 +1,12 @@
 import clsx from "clsx";
-import { GraphQLClient } from "graphql-request";
+import gqlRequest from "graphql-request";
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
 import { NextPage } from "next";
 import Head from "next/head";
 import React, { ComponentProps, useMemo, useState } from "react";
+import useSWR from "swr";
 
-import { Flow } from "~/components/Flow";
-import { MaterialInfo } from "~/components/MaterialInfo";
-import { MaterialsList } from "~/components/Materials";
-import { MouseFocusContext } from "~/components/MouseFocusContext";
+import { BibliographyContext, Flow, MaterialDetails, MaterialsList } from "~/components/Bibliography";
 import { graphql } from "~/gql";
 
 const fetchMaterialPagePathsQueryDocument = graphql(`
@@ -26,13 +24,19 @@ const fetchMaterialPageQueryDocument = graphql(`
       title
       isbn13
       cover
+      authorships {
+        author {
+          id
+          name
+        }
+      }
       references {
         material {
           id
           title
           isbn13
           cover
-          references {
+          references(limit: 5) {
             material {
               id
               title
@@ -47,8 +51,7 @@ const fetchMaterialPageQueryDocument = graphql(`
 `);
 
 export const getStaticPaths: GetStaticPaths<{ id: string }> = async () => {
-  const client = new GraphQLClient("http://localhost:4000/graphql");
-  const { materials } = await client.request(fetchMaterialPagePathsQueryDocument);
+  const { materials } = await gqlRequest("http://localhost:4000/graphql", fetchMaterialPagePathsQueryDocument);
 
   return {
     paths: materials.map(({ id }) => ({
@@ -64,6 +67,9 @@ export const getStaticProps: GetStaticProps<
     title: string;
     isbn13: string | null;
     cover: string | null;
+    authorships: {
+      author: { id: string; name: string };
+    }[];
     references: {
       id: string;
       title: string;
@@ -81,8 +87,11 @@ export const getStaticProps: GetStaticProps<
 > = async ({ params }) => {
   if (!params) return { notFound: true };
 
-  const client = new GraphQLClient("http://localhost:4000/graphql");
-  const { material } = await client.request(fetchMaterialPageQueryDocument, { id: params.id });
+  const { material } = await gqlRequest(
+    "http://localhost:4000/graphql",
+    fetchMaterialPageQueryDocument,
+    { id: params.id },
+  );
 
   return {
     props: {
@@ -90,6 +99,7 @@ export const getStaticProps: GetStaticProps<
       title: material.title,
       isbn13: material.isbn13 || null,
       cover: material.cover || null,
+      authorships: material.authorships.map(({ author }) => ({ author: { id: author.id, name: author.name } })),
       references: material.references.map(({ material }) => ({
         id: material.id,
         title: material.title,
@@ -119,8 +129,26 @@ const Page: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = (props) =
   );
 };
 
+const fetchMaterialInfoQueryDocument = graphql(`
+  query fetchMaterialInfo($id: ID!) {
+    material(id: $id) {
+      id
+      title
+      isbn13
+      cover
+      authorships {
+        author {
+          id
+          name
+        }
+      }
+    }
+  }
+`);
+
 export const PageBody: React.FC<ComponentProps<typeof Page>> = (props) => {
   const [focus, setFocus] = useState<string | null>(null);
+  const [showing, onClick] = useState<string | null>(null);
 
   const flowData: Pick<ComponentProps<typeof Flow>, "nodes" | "edges"> = useMemo(() => {
     const nodes = [
@@ -166,20 +194,49 @@ export const PageBody: React.FC<ComponentProps<typeof Page>> = (props) => {
     () =>
       [
         { id: props.id, title: props.title, thumbnail: null, nest: [0] },
-        ...props.references.reduce(
-          (prev, ref1) => [
-            ...ref1.references.map((ref2) => (
-              { id: ref2.id, title: ref2.title }
-            )),
-            { id: ref1.id, title: ref1.title },
-            ...prev,
-          ],
-          [] as { id: string; title: string }[],
-        ),
+        ...props.references
+          .reduce(
+            (prev, ref1) => [
+              ...ref1.references.map((ref2) => ({ id: ref2.id, title: ref2.title })),
+              { id: ref1.id, title: ref1.title },
+              ...prev,
+            ],
+            [] as { id: string; title: string }[],
+          ).reverse(),
       ]
         .filter(({ id: id1 }, i, arr) => arr.findIndex(({ id: id2 }) => id2 === id1) === i),
     [props],
   );
+
+  const { data, error, isValidating } = useSWR(
+    (showing && showing !== props.id) && [fetchMaterialInfoQueryDocument, { id: showing }],
+    (query, variables) => gqlRequest("http://localhost:4000/graphql", query, variables),
+  );
+  const details = useMemo<
+    {
+      id: string;
+      title: string;
+      cover: string | null;
+      authorships: { author: { id: string; name: string } }[];
+    } | null
+  >(() => {
+    if (!showing || showing === props.id) {
+      return {
+        id: props.id,
+        title: props.title,
+        cover: props.cover,
+        authorships: props.authorships,
+      };
+    } else if (data) {
+      return {
+        id: data.material.id,
+        title: data.material.title,
+        cover: data.material.cover || null,
+        authorships: data.material.authorships.map(({ author }) => ({ author: { id: author.id, name: author.name } })),
+      };
+    }
+    return null;
+  }, [data, props, showing]);
 
   return (
     <main
@@ -188,20 +245,40 @@ export const PageBody: React.FC<ComponentProps<typeof Page>> = (props) => {
         [["flex"], ["items-stretch"]],
       )}
     >
-      <MouseFocusContext.Provider value={{ focus, setFocus }}>
+      <BibliographyContext.Provider
+        value={{
+          focusId: focus,
+          showId: showing,
+          changeFocus: (id) => {
+            setFocus(id);
+          },
+          changeShow: (id) => {
+            onClick(id);
+          },
+        }}
+      >
         <div className={clsx(["w-72"], ["shadow-lg"])}>
-          <MaterialsList className={clsx(["h-full"])} focus={focus} materials={listData} />
+          <MaterialsList className={clsx(["h-full"])} materials={listData} />
         </div>
         <div className={clsx([["flex-grow"], ["flex-shrink-0"]])}>
           {<Flow nodes={flowData.nodes} edges={flowData.edges} />}
         </div>
-        <div className={clsx(["w-96"], ["shadow-lg"])}>
-          <MaterialInfo
+        <div
+          className={clsx(
+            ["z-10"],
+            ["absolute", ["right-0"]],
+            ["w-96"],
+            ["h-full"],
+            ["bg-white", ["bg-opacity-50"], ["backdrop-blur-sm"]],
+            ["shadow-lg"],
+          )}
+        >
+          <MaterialDetails
             className={clsx(["h-full"])}
-            id={props.id}
+            details={details}
           />
         </div>
-      </MouseFocusContext.Provider>
+      </BibliographyContext.Provider>
     </main>
   );
 };
