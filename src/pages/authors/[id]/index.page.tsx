@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { GraphQLClient } from "graphql-request";
+import gqlRequest from "graphql-request";
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
 import { NextPage } from "next";
 import Head from "next/head";
@@ -37,8 +37,7 @@ const fetchAuthorsPageQueryDocument = graphql(`
 export const getStaticPaths: GetStaticPaths<{
   id: string;
 }> = async () => {
-  const client = new GraphQLClient("http://localhost:4000/graphql");
-  const { authors } = await client.request(fetchAuthorsPagePathsQueryDocument);
+  const { authors } = await gqlRequest(process.env.NEXT_PUBLIC_GRAPHQL_API_URL, fetchAuthorsPagePathsQueryDocument);
 
   return {
     paths: authors.map(({ id }) => ({
@@ -60,8 +59,7 @@ export const getStaticProps: GetStaticProps<
 > = async ({ params }) => {
   if (!params) return { notFound: true };
 
-  const client = new GraphQLClient("http://localhost:4000/graphql");
-  const { author } = await client.request(fetchAuthorsPageQueryDocument, { id: params.id });
+  const { author } = await gqlRequest(process.env.NEXT_PUBLIC_GRAPHQL_API_URL, fetchAuthorsPageQueryDocument, { id: params.id });
 
   return {
     props: {

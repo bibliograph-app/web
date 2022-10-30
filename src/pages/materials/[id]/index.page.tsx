@@ -51,7 +51,7 @@ const fetchMaterialPageQueryDocument = graphql(`
 `);
 
 export const getStaticPaths: GetStaticPaths<{ id: string }> = async () => {
-  const { materials } = await gqlRequest("http://localhost:4000/graphql", fetchMaterialPagePathsQueryDocument);
+  const { materials } = await gqlRequest(process.env.NEXT_PUBLIC_GRAPHQL_API_URL, fetchMaterialPagePathsQueryDocument);
 
   return {
     paths: materials.map(({ id }) => ({
@@ -88,7 +88,7 @@ export const getStaticProps: GetStaticProps<
   if (!params) return { notFound: true };
 
   const { material } = await gqlRequest(
-    "http://localhost:4000/graphql",
+    process.env.NEXT_PUBLIC_GRAPHQL_API_URL,
     fetchMaterialPageQueryDocument,
     { id: params.id },
   );
@@ -210,7 +210,7 @@ export const PageBody: React.FC<ComponentProps<typeof Page>> = (props) => {
 
   const { data, error, isValidating } = useSWR(
     (showing && showing !== props.id) && [fetchMaterialInfoQueryDocument, { id: showing }],
-    (query, variables) => gqlRequest("http://localhost:4000/graphql", query, variables),
+    (query, variables) => gqlRequest(process.env.NEXT_PUBLIC_GRAPHQL_API_URL, query, variables),
   );
   const details = useMemo<
     {
