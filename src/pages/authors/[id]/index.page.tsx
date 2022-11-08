@@ -59,7 +59,9 @@ export const getStaticProps: GetStaticProps<
 > = async ({ params }) => {
   if (!params) return { notFound: true };
 
-  const { author } = await gqlRequest(process.env.NEXT_PUBLIC_GRAPHQL_API_URL, fetchAuthorsPageQueryDocument, { id: params.id });
+  const { author } = await gqlRequest(process.env.NEXT_PUBLIC_GRAPHQL_API_URL, fetchAuthorsPageQueryDocument, {
+    id: params.id,
+  });
 
   return {
     props: {

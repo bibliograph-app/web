@@ -1,6 +1,4 @@
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
-import Link from "next/link";
 import { useContext } from "react";
 
 import { BibliographyContext } from "./context";
@@ -17,7 +15,6 @@ export const List: React.FC<{
         className,
         ["h-full"],
         ["py-4"],
-        ["bg-slate-200"],
         ["overflow-y-scroll"],
       )}
     >
@@ -62,23 +59,6 @@ export const List: React.FC<{
                 {title}
               </span>
             </div>
-            <Link href={{ pathname: "/materials/[id]", query: { id } }}>
-              <a
-                className={clsx(
-                  ["flex", "items-center"],
-                  ["px-4", "py-2"],
-                  [["bg-blue-200"], ["text-blue-800"]],
-                  [["hover:bg-blue-400"], ["hover:text-blue-50"]],
-                )}
-              >
-                <ArrowTopRightOnSquareIcon
-                  className={clsx(
-                    ["flex-shrink-0"],
-                    ["h-4"],
-                  )}
-                />
-              </a>
-            </Link>
           </div>
         ))}
       </div>

@@ -239,47 +239,50 @@ export const PageBody: React.FC<ComponentProps<typeof Page>> = (props) => {
   }, [data, props, showing]);
 
   return (
-    <main
-      className={clsx(
-        [["min-h-[720px]"], ["h-full"]],
-        [["flex"], ["items-stretch"]],
-      )}
+    <BibliographyContext.Provider
+      value={{
+        focusId: focus,
+        showId: showing,
+        changeFocus: (id) => {
+          setFocus(id);
+        },
+        changeShow: (id) => {
+          onClick(id);
+        },
+      }}
     >
-      <BibliographyContext.Provider
-        value={{
-          focusId: focus,
-          showId: showing,
-          changeFocus: (id) => {
-            setFocus(id);
-          },
-          changeShow: (id) => {
-            onClick(id);
-          },
-        }}
+      <main
+        className={clsx(
+          ["relative"],
+          [["min-h-[720px]"], ["h-full"]],
+          [["flex"], ["items-stretch"]],
+        )}
       >
-        <div className={clsx(["w-72"], ["shadow-lg"])}>
-          <MaterialsList className={clsx(["h-full"])} materials={listData} />
-        </div>
-        <div className={clsx([["flex-grow"], ["flex-shrink-0"]])}>
-          {<Flow nodes={flowData.nodes} edges={flowData.edges} />}
-        </div>
-        <div
+        <MaterialsList
           className={clsx(
-            ["z-10"],
+            ["h-full"],
+            ["w-72"],
+            ["bg-slate-100"],
+            ["shadow-lg"],
+          )}
+          materials={listData}
+        />
+        <MaterialDetails
+          className={clsx(
             ["absolute", ["right-0"]],
+            ["z-10"],
             ["w-96"],
             ["h-full"],
             ["bg-white", ["bg-opacity-50"], ["backdrop-blur-sm"]],
             ["shadow-lg"],
           )}
-        >
-          <MaterialDetails
-            className={clsx(["h-full"])}
-            details={details}
-          />
+          details={details}
+        />
+        <div className={clsx([["flex-grow"], ["flex-shrink-0"]])}>
+          {<Flow nodes={flowData.nodes} edges={flowData.edges} />}
         </div>
-      </BibliographyContext.Provider>
-    </main>
+      </main>
+    </BibliographyContext.Provider>
   );
 };
 

@@ -16,7 +16,7 @@ export const Details: React.FC<{
     <div className={clsx(className, ["px-8"], ["py-8"])}>
       {!details && <>LOADING...</>}
       {details && (
-        <div className={clsx(className)}>
+        <>
           <div className={clsx(["w-full"], ["flex", ["justify-center"]])}>
             {details.cover && (
               <Image
@@ -52,7 +52,7 @@ export const Details: React.FC<{
               </li>
             ))}
           </ul>
-        </div>
+        </>
       )}
     </div>
   );
